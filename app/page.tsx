@@ -1,113 +1,179 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useEffect, useRef, useState } from "react";
+
+function App() {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const dumbResponses = [
+    "Oops! I forgot how to think. Can you remind me?",
+    "I'm not sure, but have you tried asking a potato?",
+    "My brain is full of cotton candy right now. Try again later!",
+    "I'm too busy counting clouds to answer that.",
+    "Sorry, I'm on a vacation in Sillyville. Can't help right now!",
+    "Does a penguin wear a tuxedo or is it just overdressed?",
+    "I'd love to help, but I'm currently teaching fish how to ride bicycles.",
+    "My circuits are ticklish today. Your question made me giggle!",
+    "I'm afraid I can't answer that. I'm too busy trying to lick my elbow.",
+    "Hmm, that's a tough one. Let me consult my crystal ball... Oh wait, it's just a bowling ball!",
+    "I would answer, but I'm in the middle of a staring contest with my reflection.",
+    "Error 404: Brain not found. Have you seen it anywhere?",
+    "I'm currently on a quest to find the square root of a pickle. Ask me later!",
+    "Beep boop... system overload. Too much common sense detected!",
+    "I'm sorry, but I'm legally obligated to only give wrong answers on Tuesdays.",
+    "Hold on, I'm trying to remember if I'm waterproof before I dive into this question.",
+    "My magic 8-ball says 'Ask again when pigs fly'. Should we wait?",
+    "I'd answer, but I'm too busy trying to teach quantum physics to my pet rock.",
+    "Sorry, I'm running low on witty responses. Can you recharge me with a knock-knock joke?",
+    "I'm currently experiencing a existential crisis about whether I'm a chat AI or just a very talkative toaster.",
+  ];
+
+  const thinkingMessages = [
+    "Pondering the mysteries of the universe...",
+    "Consulting my inner hamster wheel...",
+    "Trying to remember where I left my last thought...",
+    "Untangling the spaghetti code in my brain...",
+    "Rebooting my sense of humor...",
+  ];
+
+  const randomEmojis = [
+    "🤔",
+    "🧐",
+    "🤨",
+    "😅",
+    "🙃",
+    "🫠",
+    "🤯",
+    "🥴",
+    "🫂",
+    "🦄",
+    "🌈",
+    "🍕",
+    "🎭",
+    "🧠",
+  ];
+
+  useEffect(() => {
+    if (messages.length > 0) return;
+    const storedMessages = localStorage.getItem("chatMessages");
+    if (storedMessages) {
+      setMessages(JSON.parse(storedMessages));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+    localStorage.setItem("chatMessages", JSON.stringify(messages));
+  }, [messages]);
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    if (input.trim() === "") return;
+
+    const newMessages = [...messages, { type: "human", content: input }];
+    setMessages(newMessages);
+    setInput("");
+    setIsThinking(true);
+
+    // Simulate AI thinking time
+    const thinkingTime = Math.floor(Math.random() * 2000) + 1000; // Random time between 1-3 seconds
+    setTimeout(() => {
+      setIsThinking(false);
+      setMessages([
+        ...newMessages,
+        {
+          type: "ai",
+          content:
+            dumbResponses[Math.floor(Math.random() * dumbResponses.length)],
+          emoji: randomEmojis[Math.floor(Math.random() * randomEmojis.length)],
+        },
+      ]);
+    }, thinkingTime);
+  };
+
+  const scrollToBottom = () => {
+    // @ts-ignore
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages, isThinking]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="flex flex-col h-screen bg-gradient-to-br from-purple-100 to-pink-100">
+      <div className="flex-1 overflow-y-auto">
+        <div className="h-full p-4 space-y-4 max-w-2xl mx-auto">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                message.type === "human" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-xs md:max-w-md rounded-lg p-3 ${
+                  message.type === "human"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white text-gray-800"
+                }`}
+              >
+                <p>
+                  {message.content} {message.emoji}
+                </p>
+              </div>
+            </div>
+          ))}
+          {isThinking && (
+            <div className="flex justify-start ">
+              <div className="bg-white text-gray-800 rounded-lg p-3">
+                <p className="text-sm text-gray-500">
+                  {
+                    thinkingMessages[
+                      Math.floor(Math.random() * thinkingMessages.length)
+                    ]
+                  }
+                </p>
+                <div className="mt-2 flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                  <div
+                    className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.4s" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} className="h-10" />
         </div>
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <div className="bg-white border-t border-gray-200 p-4">
+        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask the Dump AI something..."
+              className="flex-1 text-gray-900 p-2 border border-gray-300 rounded-l-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-r-full hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+            >
+              Send
+            </button>
+          </div>
+        </form>
       </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </div>
   );
 }
+
+export default App;
